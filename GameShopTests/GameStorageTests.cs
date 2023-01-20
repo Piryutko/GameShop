@@ -1,26 +1,31 @@
-﻿using System;
-using System.Collections.Generic;
-using GameShopLibrary;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using GameShop.Domains;
+using GameShop.StorageInMemory;
 
-namespace GameShopLibraryTests
+namespace GameShopTests
 {
     [TestClass]
     public class GameStorageTests
     {
+        private GameInMemoryStorage _gameInMemoryStorage;
+
+        [TestInitialize]
+        public void GameStorageInitialize()
+        {
+            _gameInMemoryStorage = new GameInMemoryStorage();
+        }
+
         [TestMethod]
-        [DataRow("WorldOfWarcraft", 690, Genre.RPG)]
+        [DataRow("WorldOfWarcraft", 1000, Genre.RPG)]
         [DataRow("Linage2", 500, Genre.RPG)]
-        public void ShouldAddGameInGameStorage(string name, double cost, Genre genre)
+        public void ShouldAddGameInGameStorage(string name, int cost, Genre genre)
         {
             //prepare
-            var gameStorage = new GameStorage();
             var game = new Game(name, cost, genre);
             var expectedGames = new List<Game>() { game };
 
             //act
-            gameStorage.AddGame(name, cost, genre);
-            var actualGames = gameStorage.GetAllGames();
+            _gameInMemoryStorage.AddGame(name, cost, genre);
+            var actualGames = _gameInMemoryStorage.GetAllGames();
 
             //validation
             Assert.AreEqual(expectedGames.Count, actualGames.Count);
@@ -36,17 +41,16 @@ namespace GameShopLibraryTests
         [TestMethod]
         [DataRow("MassEffect", 500, Genre.RPG)]
         [DataRow("NFS", 350, Genre.Race)]
-        public void ShouldRemoveGame(string name, double cost, Genre genre)
+        public void ShouldRemoveGame(string name, int cost, Genre genre)
         {
             //prepare
-            var gameStorage = new GameStorage();
-            var gameId = gameStorage.AddGame(name, cost, genre);
+            var gameId = _gameInMemoryStorage.AddGame(name, cost, genre);
 
             var expectedResult = 0;
 
             //act
-            gameStorage.RemoveGame(gameId);
-            var actualStorageGames = gameStorage.GetAllGames();
+            _gameInMemoryStorage.RemoveGame(gameId);
+            var actualStorageGames = _gameInMemoryStorage.GetAllGames();
 
             //validation
             Assert.AreEqual(actualStorageGames.Count, expectedResult);
@@ -55,17 +59,16 @@ namespace GameShopLibraryTests
         [TestMethod]
         [DataRow("MaxPayne", 400, Genre.Shooter)]
         [DataRow("Halo", 500, Genre.Shooter)]
-        public void ShouldSellGame(string name, double cost, Genre genre)
+        public void ShouldSellGame(string name, int cost, Genre genre)
         {
             //prepare
-            var gameStorage = new GameStorage();
-            var gameId = gameStorage.AddGame(name, cost, genre);
+            var gameId = _gameInMemoryStorage.AddGame(name, cost, genre);
             var expectedResult = true;
             var soldGame = true;
 
             //act
-            gameStorage.SellGame(gameId);
-            foreach (var item in gameStorage.GetAllAvailableGames())
+            _gameInMemoryStorage.SellGame(gameId);
+            foreach (var item in _gameInMemoryStorage.GetAllAvailableGames())
             {
                 if (item.Id == gameId)
                 {
@@ -80,20 +83,19 @@ namespace GameShopLibraryTests
         [TestMethod]
         [DataRow("DragonAge", 470, Genre.RPG)]
         [DataRow("ElderScrolls", 700, Genre.RPG)]
-        public void ShouldGetAllAvailableGames(string name, double cost, Genre genre)
+        public void ShouldGetAllAvailableGames(string name, int cost, Genre genre)
         {
             //prepare
-            var gameStorage = new GameStorage();
-            gameStorage.AddGame(name, cost, genre);
+            _gameInMemoryStorage.AddGame(name, cost, genre);
 
-            var gameIdToSell = gameStorage.AddGame(name, cost, genre);
-            gameStorage.SellGame(gameIdToSell);
+            var gameIdToSell = _gameInMemoryStorage.AddGame(name, cost, genre);
+            _gameInMemoryStorage.SellGame(gameIdToSell);
 
             var expectedGame = new Game(name, cost, genre);
             var expectedAllGames = new List<Game> { expectedGame };
 
             //act
-            var availableGames = gameStorage.GetAllAvailableGames();
+            var availableGames = _gameInMemoryStorage.GetAllAvailableGames();
 
             //validation
             Assert.AreEqual(availableGames.Count, expectedAllGames.Count);
@@ -109,17 +111,16 @@ namespace GameShopLibraryTests
         [TestMethod]
         [DataRow("CallOfDuty", 600, Genre.Shooter)]
         [DataRow("Battlefiled", 600, Genre.Shooter)]
-        public void ShouldGetAllGames(string name, double cost, Genre genre)
+        public void ShouldGetAllGames(string name, int cost, Genre genre)
         {
             //prepare
-            var gameStorage = new GameStorage();
             var game = new Game(name, cost, genre);
-            gameStorage.AddGame(name, cost, genre);
+            _gameInMemoryStorage.AddGame(name, cost, genre);
 
             var expectedAllGame = new List<Game> { game };
 
             //act
-            var allGames = gameStorage.GetAllAvailableGames();
+            var allGames = _gameInMemoryStorage.GetAllAvailableGames();
 
             //validation
             for (int i = 0; i < allGames.Count; i++)
@@ -135,13 +136,12 @@ namespace GameShopLibraryTests
         public void AddGameWithEmptyName_ThrowExeption()
         {
             //prepare
-            var gameStorage = new GameStorage();
             var name = string.Empty;
             var cost = 100;
             var genre = Genre.Race;
 
             //act
-            var result = Assert.ThrowsException<ArgumentException>(() => gameStorage.AddGame(name, cost, genre));
+            var result = Assert.ThrowsException<ArgumentException>(() => _gameInMemoryStorage.AddGame(name, cost, genre));
 
             //validation
             var expectedExeption = "The string can't be left empty, null or consist of only whitespaces.";
@@ -153,13 +153,12 @@ namespace GameShopLibraryTests
         public void AddGameWithSpaceName_ThrowExeption()
         {
             //prepare
-            var gameStorage = new GameStorage();
-            var name = " ";
+            var name = string.Empty;
             var cost = 100;
             var genre = Genre.Race;
 
             //act
-            var result = Assert.ThrowsException<ArgumentException>(() => gameStorage.AddGame(name, cost, genre));
+            var result = Assert.ThrowsException<ArgumentException>(() => _gameInMemoryStorage.AddGame(name, cost, genre));
 
             //validation
             var expectedExeption = "The string can't be left empty, null or consist of only whitespaces.";
@@ -171,15 +170,14 @@ namespace GameShopLibraryTests
         public void RemoveUnknownGame_ThrowExeption()
         {
             //prepare
-            var gameStorage = new GameStorage();
-            gameStorage.AddGame("Doom", 1500, Genre.Shooter);
+            _gameInMemoryStorage.AddGame("Doom", 1500, Genre.Shooter);
             var fakeGameId = Guid.NewGuid();
 
             //act
-            var removeGame = Assert.ThrowsException<InvalidOperationException>(() => gameStorage.RemoveGame(fakeGameId));
+            var removeGame = Assert.ThrowsException<InvalidOperationException>(() => _gameInMemoryStorage.RemoveGame(fakeGameId));
 
             //validation
-            var expectedExtension = "Последовательность не содержит соответствующий элемент";
+            var expectedExtension = "Sequence contains no matching element";
             Assert.AreEqual(expectedExtension, removeGame.Message);
         }
 
@@ -187,16 +185,14 @@ namespace GameShopLibraryTests
         public void SellUnknowGame_ExpectedZeroGames()
         {
             //prepare
-            var gameStorage = new GameStorage();
             var gameId = Guid.NewGuid();
 
             //act
-            var removeGame = Assert.ThrowsException<InvalidOperationException>(() => gameStorage.SellGame(gameId));
+            var removeGame = Assert.ThrowsException<InvalidOperationException>(() => _gameInMemoryStorage.SellGame(gameId));
 
             //validation
-            var expectedExtension = "Последовательность не содержит соответствующий элемент";
+            var expectedExtension = "Sequence contains no matching element";
             Assert.AreEqual(removeGame.Message, expectedExtension);
         }
-
     }
 }

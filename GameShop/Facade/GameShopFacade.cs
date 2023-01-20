@@ -1,26 +1,23 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using GameShop.Domains;
+using GameShop.Facade;
+using GameShop.Storages;
 
-namespace GameShopLibrary
+namespace GameShop.Facades
 {
-    public class GameFacade
+    public class GameShopFacade : IGameShopFacade
     {
-        public GameFacade(PurchaseStorage purchaseStorage, GameStorage gameStorage, UserStorage userStorage)
+        public GameShopFacade(IGameStorage gameStorage, IPurchaseStorage purchaseStorage, IUserStorage userStorage)
         {
-            _purchaseStorage = purchaseStorage;
-
             _gameStorage = gameStorage;
-
+            _purchaseStorage = purchaseStorage;
             _userStorage = userStorage;
         }
 
-        private UserStorage _userStorage;
+        private readonly IGameStorage _gameStorage;
+        private readonly IPurchaseStorage _purchaseStorage;
+        private readonly IUserStorage _userStorage;
 
-        private PurchaseStorage _purchaseStorage;
-
-        private GameStorage _gameStorage;
-
-        public Guid AddGame(string name, double cost, Genre genre)
+        public Guid AddGame(string name, decimal cost, Genre genre)
         {
             return _gameStorage.AddGame(name, cost, genre);
         }
@@ -43,10 +40,16 @@ namespace GameShopLibrary
         public void BuyGame(Guid userId, Guid gameId)
         {
             var game = _gameStorage.GetGame(gameId);
-            var user = _userStorage.GetUser(userId);
+            var user = _userStorage.Exist(userId);
 
             _purchaseStorage.Add(user, game);
             _gameStorage.SellGame(game);
         }
+
+        public Guid AddUser(string name)
+        {
+           return _userStorage.Add(name);
+        }
+
     }
 }

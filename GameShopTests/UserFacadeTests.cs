@@ -1,30 +1,40 @@
-﻿using System;
-using GameShopLibrary;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿using GameShop.Facades;
+using GameShop.StorageInMemory;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 
-namespace GameShopLibraryTests
+namespace GameShopTests
 {
     [TestClass]
     public class UserFacadeTests
     {
+        private UserInMemoryStorage _userInMemoryStorage;
+        private UserFacade _userFacade;
+
+        [TestInitialize]
+        public void UserFacadeTestsInitialize()
+        {
+            _userInMemoryStorage = new UserInMemoryStorage();
+            _userFacade = new UserFacade(_userInMemoryStorage);
+        }
+
         [TestMethod]
         [DataRow("Altair")]
         [DataRow("Ezio")]
         public void ShouldCreateUser(string name)
         {
-            //prepare
-            var userStorage = new UserStorage();
-            var userFacade = new UserFacade(userStorage);
-
             //act
-            var userId = userFacade.CreateUser(name);
+            var userId = _userFacade.CreateUser(name);
 
             //validation
 
             var expectedCount = 1;
             var expectedName = name;
             var expectedUserId = userId;
-            var actualUsers = userStorage.GetAllUsers();
+            var actualUsers = _userInMemoryStorage.GetAll();
 
             Assert.AreEqual(expectedName, actualUsers[0].Name);
             Assert.AreEqual(expectedUserId, actualUsers[0].Id);
@@ -37,17 +47,14 @@ namespace GameShopLibraryTests
         public void ShouldDeleteUser(string name)
         {
             //prepare
-            var userStorage = new UserStorage();
-            var userFacade = new UserFacade(userStorage);
-            var userId = userFacade.CreateUser(name);
-            var userCount = userStorage.GetAllUsers();
+            var userId = _userFacade.CreateUser(name);
 
             //act
-            userFacade.DeleteUser(userId);
+            _userFacade.DeleteUser(userId);
 
             //validation
             var expectedUserCount = 0;
-            var users = userStorage.GetAllUsers();
+            var users = _userInMemoryStorage.GetAll();
             Assert.AreEqual(expectedUserCount, users.Count);
         }
 
@@ -55,12 +62,10 @@ namespace GameShopLibraryTests
         public void AddUserWithEmptyName_ThrowExeption()
         {
             //prepare
-            var userStorage = new UserStorage();
-            var userFacade = new UserFacade(userStorage);
             var name = string.Empty;
 
             //act
-            var user = Assert.ThrowsException<ArgumentException>(() => userFacade.CreateUser(name));
+            var user = Assert.ThrowsException<ArgumentException>(() => _userFacade.CreateUser(name));
 
             //validation
             string expectedException = "The string can't be left empty, null or consist of only whitespaces.";
@@ -71,12 +76,10 @@ namespace GameShopLibraryTests
         public void AddUserWithSpaceName_ThrowExeption()
         {
             //prepare
-            var userStorage = new UserStorage();
-            var userFacade = new UserFacade(userStorage);
-            var name = " ";
+            var name = string.Empty;
 
             //act
-            var user = Assert.ThrowsException<ArgumentException>(() => userFacade.CreateUser(name));
+            var user = Assert.ThrowsException<ArgumentException>(() => _userFacade.CreateUser(name));
 
             //validation
             string expectedException = "The string can't be left empty, null or consist of only whitespaces.";
