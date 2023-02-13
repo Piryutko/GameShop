@@ -28,4 +28,4 @@ __В проекте реализовано:__
     - [X] Guard библиотека (Ensure.That 10.1.0)
 
  - ## Ближайший update
-    - [ ] ASP.NET CORE
+    - [ ] ASP.NET Core
