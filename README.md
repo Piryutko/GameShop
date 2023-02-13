@@ -26,3 +26,6 @@ __В проекте реализовано:__
     - [X] MS SQL
     - [X] LINQ
     - [X] Guard библиотека (Ensure.That 10.1.0)
+
+ - ## Ближайший update
+    - [ ] ASP.NET CORE
